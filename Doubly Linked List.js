@@ -60,6 +60,7 @@ function dL_toList_deep(dlst) {
 }
 
 /*
+Definition:
 A doubleList is either a null, or a triplet whose head (prevNode) a doubleList and whose
 tail (nextNode) is a doubleList.
 */
