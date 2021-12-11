@@ -12,7 +12,7 @@ and nextNode(tail) is not pointing to the list's head
 Triplet Structure: [previous node, item, next node]
 */
 const triplet = (x, y, z) => [x, y, z];
-const item = triplet => triplet[1];
+const getItem = triplet => triplet[1];
 const prevNode = triplet => triplet[0];
 const nextNode = triplet => triplet[2];
 const setNext = (triplet, x) => {triplet[2] = x;};
