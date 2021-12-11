@@ -8,11 +8,16 @@ prevNode(head) is not pointing to the list's tail
 and nextNode(tail) is not pointing to the list's head
 */
 
+/*
+Triplet Structure: [previous node, item, next node]
+*/
 const triplet = (x, y, z) => [x, y, z];
 const item = triplet => triplet[1];
 const prevNode = triplet => triplet[0];
 const nextNode = triplet => triplet[2];
 const setNext = (triplet, x) => {triplet[2] = x;};
+const setItem = (triplet, x) => {triplet[1] = x;};
+const setPrev = (triplet, x) => {triplet[0] = x;};
 
 
 // NOT YET COMPLETED
@@ -22,18 +27,16 @@ tail (nextNode) is null or a doubleList
 */
 function doubleList(lst) {
     function creator(lst, prev) {
-        return is_null(lst)
-            ?
-            : triplet()
+        if(is_null(lst)) {
+            return null;
+        } else {
+            const result = triplet(prev, head(lst), null);
+            const next = creator(tail(lst), result);
+            setNext(result, next);
+            
+            return result;
+        }
     }
-    let head = null;
-    let tail = null;
-    let result = null;
     
-    let pointerList = lst;
-    let pointerDList = result;
-    
-    while(!is_null(pointerList)) {
-        result = triplet(result, head(lst), null);
-    }
+    return creator(lst, null);
 }
