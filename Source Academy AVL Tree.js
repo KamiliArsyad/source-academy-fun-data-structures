@@ -59,12 +59,10 @@ const getNodeProp = node => getItem(nextNode(nextNode(node)))[1];
 const getLeftChild = node => getItem(nextNode(node));
 const getRightChild = node => getItem(nextNode(nextNode(nextNode(node))));
 
-
-
-
-
-
-
-
+const setParent = (node, parent) => setItem(node, parent);
+const setNodeItem = (node, item) => {getItem(nextNode(nextNode(node)))[0] = item;};
+const setNodeProp = (node, prop) => {getItem(nextNode(nextNode(node)))[1] = prop;};
+const setLeftChild = (node, child) => setItem(nextNode(node), child);
+const setRightChild = (node, child) => setItem(nextNode(nextNode(nextNode(node))), child);
 
 
