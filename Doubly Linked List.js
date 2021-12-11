@@ -19,15 +19,49 @@ const setNext = (triplet, x) => {triplet[2] = x;};
 const setItem = (triplet, x) => {triplet[1] = x;};
 const setPrev = (triplet, x) => {triplet[0] = x;};
 
-function doubleList_ref(dlst, n) {
+function dL_ref(dlst, n) {
     return n === 0
         ? getItem(dlst)
-        : doubleList_ref(nextNode(dlst), n-1);
+        : dL_ref(nextNode(dlst), n-1);
+}
+
+function dL_map(f, dlst) {
+    function creator(dlst, prev) {
+        if(is_null(dlst)) {
+            return null;
+        } else {
+            const result = triplet(prev, f(getItem(dlst)), null);
+            const next = creator(nextNode(dlst), result);
+            setNext(result, next);
+            
+            return result;
+        }
+    }
+    
+    return creator(dlst, null);
+}
+
+function dL_toList(dlst) {
+    return is_null(dlst)
+        ? null
+        : pair( getItem(dlst), 
+                dL_toList(nextNode(dlst))
+                );
+}
+
+function dL_toList_deep(dlst) {
+    return is_null(dlst)
+        ? null
+        : !is_number(getItem(dlst)) && !is_string(getItem(dlst))
+        ? pair( dL_toList_deep(getItem(dlst)), dL_toList_deep(nextNode(dlst)) )
+        : pair( getItem(dlst), 
+                dL_toList_deep(nextNode(dlst))
+                );
 }
 
 /*
-A doubleList is a triplet whose head (prevNode) is null or a doubleList, and whose
-tail (nextNode) is null or a doubleList
+A doubleList is either a null, or a triplet whose head (prevNode) a doubleList and whose
+tail (nextNode) is a doubleList.
 */
 function doubleList(lst) {
     function creator(lst, prev) {
