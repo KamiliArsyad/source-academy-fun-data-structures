@@ -19,6 +19,12 @@ const setNext = (triplet, x) => {triplet[2] = x;};
 const setItem = (triplet, x) => {triplet[1] = x;};
 const setPrev = (triplet, x) => {triplet[0] = x;};
 
+function doubleList_ref(dlst, n) {
+    return n === 0
+        ? getItem(dlst)
+        : doubleList_ref(nextNode(dlst), n-1);
+}
+
 /*
 A doubleList is a triplet whose head (prevNode) is null or a doubleList, and whose
 tail (nextNode) is null or a doubleList
