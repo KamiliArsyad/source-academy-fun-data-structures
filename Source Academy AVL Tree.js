@@ -190,6 +190,18 @@ function depth(N) {
     return depth_iter(N, 0);
 }
 
+//returns the height of a node (distance to leaf)
+function height(N) {
+    //not yet completed
+    function height_iter(N, res) {
+        if(!is_leaf(N)) {
+            // const bigChild = getNodeProp(getRightChild) > getNodeProp(getLeftChild) ? 
+        } else {
+            res;
+        }
+    }
+}
+
 // MODIFIERS ---------
 
 //swap
