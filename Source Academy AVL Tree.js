@@ -1,10 +1,10 @@
 /*
 -------------- ABOUT THIS PROJECT ----------------
 This is a project to create a fully working functional AVL tree, also known as
-balanced binary search tree (traversal order).
+balanced binary search tree (order: traversal order).
 The tree is self-balancing, mutable, and includes all the good interfaces described below.
 
-The tree uses a doubleList data structure (another project) to allow bidirectional
+The tree uses a doubleList data structure (another project; check it out!) to allow bidirectional
 parent-child access.
 */
 
@@ -90,13 +90,16 @@ const setRightChild = (node, child) => setItem(nextNode(nextNode(nextNode(node))
 
 //slightly more advanced interfaces
 
+// CHILDS AND PARENTS ARE ONLY DEFINED USING THIS FUNCTION
 function defineChild(parent, child, position) {
     setParent(child, parent);
     
     if(position === "LEFT") {
         setLeftChild(parent, child);
+        update(child);
     } else if(position === "RIGHT") {
         setRightChild(parent, child);
+        update(child);
     } else {
         error(position, 'unsupported string position:');
     }
@@ -176,6 +179,83 @@ function successor(N){
         : subtree_first(getRightChild(N));
 }
 
+//returns the depth of a node (distance to root)
+function depth(N) {
+    function depth_iter(N, res) {
+        return is_root(N)
+            ? res
+            : depth_iter(getParent(N), res + 1);
+    }
+    
+    return depth_iter(N, 0);
+}
+
+// MODIFIERS ---------
+
+//swap
+function swap(nodeA, nodeB) {
+    const parentA = getParent(nodeA);
+    const parentB = getParent(nodeB);
+    
+    const l_childA = getLeftChild(nodeA);
+    const l_childB = getLeftChild(nodeB);
+    
+    const r_childA = getRightChild(nodeA);
+    const r_childB = getRightChild(nodeB);
+    
+    const propA = getNodeProp(nodeA);
+    const propB = getNodeProp(nodeB);
+    
+    // not yet finished but u get the idea
+}
+//insert
+function insert_before(node, target) {
+    
+}
+
+function insert_after(node, target) {
+    
+}
+
+//delete
+function delete_node(N) {
+    
+}
+
+//rotate
+function rotate_AVL(tree) {
+    
+}
+
+// AUGMENTATION --------
+/*
+what's augmented: Only number of nodes (for now)
+*/
+
+function combine(propA, propB) {
+    return f => f(propA, propB);
+}
+
+// update all the affected ancestors O(h)
+function update(st) {
+    if(is_single(st)) {
+        setNodeProp(st, 1);
+    } else if(is_leaf(st)) {
+        setNodeProp(st, 1);
+        update(getParent(st));
+    } else if(is_root(st)) {
+        const rightProp = is_null(getRightChild(st)) ? 0 : getNodeProp(getRightChild(st));
+        const leftProp = is_null(getLeftChild(st)) ? 0 : getNodeProp(getLeftChild(st));
+        
+        setNodeProp(st, combine(leftProp, rightProp)((x, y) => x + y + 1));
+    } else {
+        const rightProp = is_null(getRightChild(st)) ? 0 : getNodeProp(getRightChild(st));
+        const leftProp = is_null(getLeftChild(st)) ? 0 : getNodeProp(getLeftChild(st));
+        
+        setNodeProp(st, combine(leftProp, rightProp)((x, y) => x + y + 1));
+        update(getParent(st));
+    }
+}
 
 //test
 const root = createNode(null, 'SECOND ITEM', null);
