@@ -241,9 +241,10 @@ function rotate_AVL(tree) {
 
 // AUGMENTATION --------
 /*
-what's augmented: Only number of nodes (for now)
+what's augmented: Only number of nodes in a subtree (for now)
 */
 
+//Output a function that receives a function to provide more flexibility later
 function combine(propA, propB) {
     return f => f(propA, propB);
 }
