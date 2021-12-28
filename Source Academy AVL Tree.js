@@ -90,7 +90,7 @@ const setRightChild = (node, child) => setItem(nextNode(nextNode(nextNode(node))
 
 //slightly more advanced interfaces
 
-// CHILDS AND PARENTS ARE ONLY DEFINED USING THIS FUNCTION
+// CHILDS AND PARENTS ARE ONLY DEFINED USING THIS FUNCTION FOR THE SAKE OF AUGMENTATION
 function defineChild(parent, child, position) {
     setParent(child, parent);
     
@@ -149,6 +149,20 @@ function is_single(N) {
     return is_leaf(N) && is_root(N);
 }
 
+//severe the connection of a node from its parent.
+function severe(N) {
+    const parent = getParent(N);
+    
+    if(is_rightChild(N)) {
+        setRightChild(getParent(N), null);
+    } else if(is_leftChild(N)){
+        setLeftChild(getParent(N), null);
+    }
+    
+    setParent(N, null);
+    update(parent);
+}
+
 function subtree_first(N) {
     return is_leaf(N)
         ? N
@@ -166,7 +180,7 @@ function predecessor(N){
     return is_rightChild(N) && is_null(getLeftChild(N))
         ? getParent(N)
         : is_null(getLeftChild(N))
-        ? error(getNodeItem(N), "No predecessor detected before ")
+        ? error(getNodeItem(N), "No predecessor before node: ")
         : subtree_last(getLeftChild(N));
 }
 
@@ -175,7 +189,7 @@ function successor(N){
     return is_leftChild(N) && is_null(getRightChild(N))
         ? getParent(N)
         : is_null(getRightChild(N))
-        ? error(getNodeItem(N), "This is already the last node:")
+        ? error(getNodeItem(N), "No successor from node: ")
         : subtree_first(getRightChild(N));
 }
 
@@ -204,34 +218,57 @@ function height(N) {
 
 // MODIFIERS ---------
 
-//swap
+//swap items between two nodes
 function swap(nodeA, nodeB) {
-    const parentA = getParent(nodeA);
-    const parentB = getParent(nodeB);
+    // const parentA = getParent(nodeA);
+    // const parentB = getParent(nodeB);
     
-    const l_childA = getLeftChild(nodeA);
-    const l_childB = getLeftChild(nodeB);
+    // const l_childA = getLeftChild(nodeA);
+    // const l_childB = getLeftChild(nodeB);
     
-    const r_childA = getRightChild(nodeA);
-    const r_childB = getRightChild(nodeB);
+    // const r_childA = getRightChild(nodeA);
+    // const r_childB = getRightChild(nodeB);
     
-    const propA = getNodeProp(nodeA);
-    const propB = getNodeProp(nodeB);
+    // const propA = getNodeProp(nodeA);
+    // const propB = getNodeProp(nodeB);
     
-    // not yet finished but u get the idea
+    // not used because too complex but it's ok bcs the concept of
+    // pointing nodes individually will no longer be used.
+    
+    const itemA = getNodeItem(nodeA);
+    setNodeItem(nodeA, getNodeItem(nodeB));
+    setNodeItem(nodeB, itemA);
 }
 //insert
-function insert_before(node, target) {
+function insert_before(newNode, target) {
+    if(getLeftChild(target) === null) {
+        defineChild(target, newNode, 'LEFT');
+    } else {
+        defineChild(predecessor(target), newNode, 'LEFT');
+    }
     
+    // update(newNode);
 }
 
-function insert_after(node, target) {
+function insert_after(newNode, target) {
+    if(getRightChild(target) === null) {
+        defineChild(target, newNode, 'RIGHT');
+    } else {
+        defineChild(successor(target), newNode, 'RIGHT');
+    }
     
+    update(newNode);
 }
 
 //delete
 function delete_node(N) {
-    
+    //if leaf: Delete. else: recurse through predecessor until leaf.
+    if(is_leaf(N)) {
+        severe(N);
+    } else {
+        swap(N, predecessor(N));
+        delete_node(N);
+    }
 }
 
 //rotate
@@ -249,7 +286,7 @@ function combine(propA, propB) {
     return f => f(propA, propB);
 }
 
-// update all the affected ancestors O(h)
+// update property of all the affected ancestors of a subtree. time: O(h)
 function update(st) {
     if(is_single(st)) {
         setNodeProp(st, 1);
