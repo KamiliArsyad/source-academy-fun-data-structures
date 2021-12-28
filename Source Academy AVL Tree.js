@@ -164,33 +164,51 @@ function severe(N) {
 }
 
 function subtree_first(N) {
-    return is_leaf(N)
+    return is_leaf(N) || is_null(getLeftChild(N))
         ? N
         : subtree_first(getLeftChild(N));
 }
 
 function subtree_last(N) {
-    return is_leaf(N)
+    return is_leaf(N) || is_null(getRightChild(N))
         ? N
         : subtree_last(getRightChild(N));
 }
 
 //returns the pointer of the node before N in the traversal order
-function predecessor(N){
+function predecessor(N){ // this is probably faulty too; gotta check later
     return is_rightChild(N) && is_null(getLeftChild(N))
         ? getParent(N)
         : is_null(getLeftChild(N))
-        ? error(getNodeItem(N), "No predecessor before node: ")
+        ? null
         : subtree_last(getLeftChild(N));
 }
 
 //returns the pointer of the node after N in the traversal order
-function successor(N){
-    return is_leftChild(N) && is_null(getRightChild(N))
-        ? getParent(N)
-        : is_null(getRightChild(N))
-        ? error(getNodeItem(N), "No successor from node: ")
-        : subtree_first(getRightChild(N));
+function successor(N) { //bug fixed
+    if(!is_null(getRightChild(N))) {
+        return subtree_first(getRightChild(N));
+    } else {
+        let pointer = N;
+        while(is_rightChild(pointer)) {
+            pointer = getParent(pointer);
+        }
+        
+        return getParent(pointer);
+    }
+}
+
+//returns an array consisting of all the elements of the tree in traversal order
+function traverse(tree) {
+    const result = [];
+    let pointer = subtree_first(tree);
+    
+    for(let i = 0; !is_null(pointer); i = i + 1) {
+        result[i] = getNodeItem(pointer);
+        pointer = successor(pointer);
+    }
+    
+    return result;
 }
 
 //returns the depth of a node (distance to root)
@@ -242,27 +260,23 @@ function swap(nodeA, nodeB) {
 //insert
 function insert_before(newNode, target) {
     if(getLeftChild(target) === null) {
-        defineChild(target, newNode, 'LEFT');
+        defineChild(target, newNode, 'RIGHT');
     } else {
-        defineChild(predecessor(target), newNode, 'LEFT');
+        defineChild(predecessor(target), newNode, 'RIGHT');
     }
-    
-    // update(newNode);
 }
 
 function insert_after(newNode, target) {
     if(getRightChild(target) === null) {
-        defineChild(target, newNode, 'RIGHT');
+        defineChild(target, newNode, 'LEFT');
     } else {
-        defineChild(successor(target), newNode, 'RIGHT');
+        defineChild(successor(target), newNode, 'LEFT');
     }
-    
-    update(newNode);
 }
 
 //delete
 function delete_node(N) {
-    //if leaf: Delete. else: recurse through predecessor until leaf.
+    //if leaf: Delete. else: recurse swap through predecessor until leaf.
     if(is_leaf(N)) {
         severe(N);
     } else {
