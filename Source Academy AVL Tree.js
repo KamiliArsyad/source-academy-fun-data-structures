@@ -92,14 +92,34 @@ const setRightChild = (node, child) => setItem(nextNode(nextNode(nextNode(node))
 
 // CHILDS AND PARENTS ARE ONLY DEFINED USING THIS FUNCTION FOR THE SAKE OF AUGMENTATION
 function defineChild(parent, child, position) {
-    setParent(child, parent);
+    if(!is_null(child)) {
+        setParent(child, parent);
+    }
     
     if(position === "LEFT") {
+        if(!is_null(getLeftChild(parent))) {
+            setParent(getLeftChild(parent), null);
+        }
+        
         setLeftChild(parent, child);
-        update(child);
+        
+        if(is_null(child)) {
+            update(parent);
+        } else {
+            update(child);
+        }
     } else if(position === "RIGHT") {
+        if(!is_null(getRightChild(parent))) {
+            setParent(getRightChild(parent), null);
+        }
+        
         setRightChild(parent, child);
-        update(child);
+        
+        if(is_null(child)) {
+            update(parent);
+        } else {
+            update(child);
+        }
     } else {
         error(position, 'unsupported string position:');
     }
@@ -149,19 +169,6 @@ function is_single(N) {
     return is_leaf(N) && is_root(N);
 }
 
-//severe the connection of a node from its parent.
-function severe(N) {
-    const parent = getParent(N);
-    
-    if(is_rightChild(N)) {
-        setRightChild(getParent(N), null);
-    } else if(is_leftChild(N)){
-        setLeftChild(getParent(N), null);
-    }
-    
-    setParent(N, null);
-    update(parent);
-}
 
 function subtree_first(N) {
     return is_leaf(N) || is_null(getLeftChild(N))
@@ -223,16 +230,23 @@ function depth(N) {
 }
 
 //returns the height of a node (distance to leaf)
+//solution 1 (used here): O(n) time
+//solution 2 (not yet implemented): O(1) time (augment the height)
 function height(N) {
-    //not yet completed
-    function height_iter(N, res) {
-        if(!is_leaf(N)) {
-            // const bigChild = getNodeProp(getRightChild) > getNodeProp(getLeftChild) ? 
-        } else {
-            res;
-        }
-    }
+    return is_null(N)
+        ? 0
+        : is_leaf(N)
+        ? 1
+        : 1 + math_max(height(getRightChild(N)), height(getLeftChild(N)));
 }
+
+//skew
+function skew(tree) {
+    return height(getRightChild(tree)) - height(getLeftChild(tree));
+}
+
+//checks if a binary tree is balanced
+const is_balanced = tree => math_abs(skew(tree)) === 1 || math_abs(skew(tree)) === 0;
 
 // MODIFIERS ---------
 
@@ -260,7 +274,7 @@ function swap(nodeA, nodeB) {
 //insert
 function insert_before(newNode, target) {
     if(getLeftChild(target) === null) {
-        defineChild(target, newNode, 'RIGHT');
+        defineChild(target, newNode, 'LEFT');
     } else {
         defineChild(predecessor(target), newNode, 'RIGHT');
     }
@@ -268,9 +282,20 @@ function insert_before(newNode, target) {
 
 function insert_after(newNode, target) {
     if(getRightChild(target) === null) {
-        defineChild(target, newNode, 'LEFT');
+        defineChild(target, newNode, 'RIGHT');
     } else {
         defineChild(successor(target), newNode, 'LEFT');
+    }
+}
+
+//severe the connection of a leaf from its parent.
+function severe(N) {
+    const parent = getParent(N);
+    
+    if(is_rightChild(N)) {
+        defineChild(parent, null, 'RIGHT');
+    } else if(is_leftChild(N)){
+        defineChild(parent, null, 'LEFT');
     }
 }
 
@@ -281,13 +306,46 @@ function delete_node(N) {
         severe(N);
     } else {
         swap(N, predecessor(N));
-        delete_node(N);
+        delete_node(predecessor(N));
     }
 }
 
-//rotate
-function rotate_AVL(tree) {
+//rotate the AVL tree
+function rightRotate(tree) {
+    const parent = getParent(tree);
+    const subtree_root = tree;
+    const direction = is_null(subtree_root) ? null : is_leftChild(subtree_root) ? 'LEFT' : 'RIGHT';//which child the subtree_root was
+    const leftSubtree = getLeftChild(tree);
+    const rightGrandChild = is_null(leftSubtree) ? null : getRightChild(leftSubtree);
     
+    severe(rightGrandChild);
+    severe(leftSubtree);
+    
+    if(!is_null(parent)) {
+        defineChild(parent, leftSubtree, direction);
+    }
+    
+    defineChild(leftSubtree, subtree_root, 'RIGHT');
+    defineChild(subtree_root, rightGrandChild, 'LEFT');
+    
+}
+
+function leftRotate(tree) {
+    const parent = getParent(tree);
+    const subtree_root = tree;
+    const direction = is_null(subtree_root) ? null : is_leftChild(subtree_root) ? 'LEFT' : 'RIGHT';
+    const rightSubtree = getRightChild(tree);
+    const leftGrandChild = is_null(rightSubtree) ? null : getLeftChild(rightSubtree);
+    
+    severe(leftGrandChild);
+    severe(rightSubtree);
+    
+    if(!is_null(parent)) {
+        defineChild(parent, rightSubtree);
+    }
+    
+    defineChild(rightSubtree, subtree_root, 'LEFT');
+    defineChild(subtree_root, leftGrandChild, 'RIGHT');
 }
 
 // AUGMENTATION --------
@@ -322,9 +380,20 @@ function update(st) {
 }
 
 //test
+// Please mind that we can't use this method here to build our tree.
+// To build our tree, the nodes should be created anonymously because of how the function swap() works.
 const root = createNode(null, 'SECOND ITEM', null);
 const right = createNode(null, 'THIRD ITEM', null);
 const left = createNode(null, 'FIRST ITEM', null);
 defineChild(root, right, 'RIGHT');
 defineChild(root, left, 'LEFT');
 
+const checkRight = x => getNodeItem(getRightChild(x));
+const checkLeft = x => getNodeItem(getLeftChild(x));
+const checkParent = x => getNodeItem(getParent(x));
+
+
+//log
+/*
+bug found when defining a grandchild of a root as a child using defineChild(): Stuff entangles around.
+*/
