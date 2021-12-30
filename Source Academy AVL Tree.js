@@ -396,4 +396,5 @@ const checkParent = x => getNodeItem(getParent(x));
 //log
 /*
 bug found when defining a grandchild of a root as a child using defineChild(): Stuff entangles around.
+solution: don't do it.
 */
