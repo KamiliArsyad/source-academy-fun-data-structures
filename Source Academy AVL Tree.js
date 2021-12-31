@@ -350,13 +350,16 @@ function leftRotate(tree) {
 
 // AUGMENTATION --------
 /*
-what's augmented: Only number of nodes in a subtree (for now)
+what's augmented: either height of or number of elements in a subtree (for now)
 */
 
 //Output a function that receives a function to provide more flexibility later
 function combine(propA, propB) {
     return f => f(propA, propB);
 }
+
+const heightUpdate = (x, y) => x > y ? x + 1 : y + 1);
+const numUpdate = (x, y) => x + y + 1;
 
 // update property of all the affected ancestors of a subtree. time: O(h)
 function update(st) {
@@ -369,12 +372,12 @@ function update(st) {
         const rightProp = is_null(getRightChild(st)) ? 0 : getNodeProp(getRightChild(st));
         const leftProp = is_null(getLeftChild(st)) ? 0 : getNodeProp(getLeftChild(st));
         
-        setNodeProp(st, combine(leftProp, rightProp)((x, y) => x + y + 1));
+        setNodeProp(st, combine(leftProp, rightProp)(heightUpdate);
     } else {
         const rightProp = is_null(getRightChild(st)) ? 0 : getNodeProp(getRightChild(st));
         const leftProp = is_null(getLeftChild(st)) ? 0 : getNodeProp(getLeftChild(st));
         
-        setNodeProp(st, combine(leftProp, rightProp)((x, y) => x + y + 1));
+        setNodeProp(st, combine(leftProp, rightProp)(heightUpdate);
         update(getParent(st));
     }
 }
