@@ -147,6 +147,12 @@ function is_sibling(N1, N2) {
         : getParent(N1) === getParent(N2);
 }
 
+function getRoot(N) {
+    return is_root(N)
+        ? N
+        : getRoot(getParent(N));
+}
+
 function ancestors(N) {
     const result = [];
     let pointer = N;
@@ -231,13 +237,19 @@ function depth(N) {
 
 //returns the height of a node (distance to leaf)
 //solution 1 (used here): O(n) time
-//solution 2 (not yet implemented): O(1) time (augment the height)
-function height(N) {
+/*function height(N) {
     return is_null(N)
         ? 0
         : is_leaf(N)
         ? 1
         : 1 + math_max(height(getRightChild(N)), height(getLeftChild(N)));
+}*/
+//solution 2: O(1) time (augment the height)
+
+function height(N) {
+    return is_null(N)
+        ? 0
+        : getNodeProp(N);
 }
 
 //skew
@@ -358,7 +370,7 @@ function combine(propA, propB) {
     return f => f(propA, propB);
 }
 
-const heightUpdate = (x, y) => x > y ? x + 1 : y + 1);
+const heightUpdate = (x, y) => x > y ? x + 1 : y + 1;
 const numUpdate = (x, y) => x + y + 1;
 
 // update property of all the affected ancestors of a subtree. time: O(h)
@@ -372,14 +384,77 @@ function update(st) {
         const rightProp = is_null(getRightChild(st)) ? 0 : getNodeProp(getRightChild(st));
         const leftProp = is_null(getLeftChild(st)) ? 0 : getNodeProp(getLeftChild(st));
         
-        setNodeProp(st, combine(leftProp, rightProp)(heightUpdate);
+        setNodeProp(st, combine(leftProp, rightProp)(heightUpdate));
     } else {
         const rightProp = is_null(getRightChild(st)) ? 0 : getNodeProp(getRightChild(st));
         const leftProp = is_null(getLeftChild(st)) ? 0 : getNodeProp(getLeftChild(st));
         
-        setNodeProp(st, combine(leftProp, rightProp)(heightUpdate);
+        setNodeProp(st, combine(leftProp, rightProp)(heightUpdate));
         update(getParent(st));
     }
+}
+
+// ------------
+// TREE BALANCING
+// ------------
+// balance a tree from a leaf to its ancestors
+function balance(node) {
+    /*
+    1. From leaf, trace ancestors until lowest unbalanced tree is found
+    2. fix using either of three cases
+    3. continue tracing and fixing ancestors
+    */
+    //given a lowest unbalanced tree, fix it so that it is balanced
+    function fix(tree){
+        display('FIXING IN PROGRESS');
+        const skewness = skew(tree);
+        if(skewness > 0) { //right child bigger than left child by two
+            const R = getRightChild(tree);
+            if(skew(R) === 1 || skew(R) === 0) {
+                leftRotate(tree);
+            } else {
+                rightRotate(R);
+                leftRotate(tree);
+            }
+        } else {
+            const L = getLeftChild(tree);
+            if(skew(L) === 0 || skew(L) === -1) {
+                rightRotate(tree);
+            } else {
+                leftRotate(L);
+                rightRotate(tree);
+            }
+        }
+    }
+    
+    for(let pointer = node; !is_null(pointer); pointer = getParent(pointer)) {
+        if(!is_balanced(pointer)) {
+            fix(pointer);
+        }
+    }
+}
+
+function insert_end(item, tree) {
+    if(is_null(successor(tree))) {
+        insert_after(createNode(null, item, null), tree);
+        balance(tree);
+    } else {
+        insert_end(item, successor(tree));
+    }
+}
+
+
+//build a balanced binary tree
+function build(arr) {
+    let res = createNode(null, arr[0], null);
+    
+    for(let i = 1; i < array_length(arr); i = i + 1) {
+        insert_end(arr[i], res);
+        display(arr[i], 'INSERTING VALUE:');
+    }
+    
+    display('BUILD FINISHED');
+    return getRoot(res);
 }
 
 //test
@@ -395,9 +470,24 @@ const checkRight = x => getNodeItem(getRightChild(x));
 const checkLeft = x => getNodeItem(getLeftChild(x));
 const checkParent = x => getNodeItem(getParent(x));
 
+// insert_before(createNode(null, 'A', null), right);
+// insert_before(createNode(null, 'something', null), getLeftChild(right));
+// insert_after(createNode(null, 'B', null), right);
+// insert_before(createNode(null, 'something', null), getRightChild(right));
+
+const A = createNode(null, 'A', null);
+const B = createNode(null, 'B', null);
+const C = createNode(null, 'C', null);
+const D = createNode(null, 'D', null);
+const X = createNode(null, 'X', null);
+const Y = createNode(null, 'Y', null);
+const Z = createNode(null, 'Z', null);
+
 
 //log
 /*
 bug found when defining a grandchild of a root as a child using defineChild(): Stuff entangles around.
 solution: don't do it.
+
+bug found in left and right rotate: Cases where the nodes involved in rotation are null. Not yet fixed. Gonna sleep now.
 */
