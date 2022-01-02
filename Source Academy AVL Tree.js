@@ -8,6 +8,28 @@ The tree uses a doubleList data structure (another project; check it out!) to al
 parent-child access.
 */
 
+
+//now that it's completed, here's some basic interfaces for you to try stuff out:
+/*
+1. build a balanced binary tree from array in O(n*logn) time: build(arr);
+2. create an individual node: createNode(null, item, null);
+3. get right/right child: getRightChild(node); or getLeftChild(node);
+4. get parent: getParent(node);
+5. basic is_something operation: you know what it is.
+6. get an item from a node: getNodeItem(node);
+7. ... many more functionalities and interfaces; see below!
+
+when we build a tree, the 'tree' we are referring to is the root node of that tree.
+
+note: use 'let' to declare a variable that points to a tree because some operations
+might change the tree's root and you need to re-declare your root position.
+example:
+let tree = build([1,2,3]);
+..modify stuff here...
+tree = getRoot(tree); //maintain root. This won't be possible if you use const.
+
+*/
+
 // --------------------------------------------------------------------------------------
 // DOUBLE LIST DATA STRUCTURE
 // --------------------------------------------------------------------------------------
@@ -68,9 +90,9 @@ function doubleList(lst) {
 
 
 /*
-------------------------------------
-        Binary Search Tree
-------------------------------------
+------------------------------------------
+           Binary Search Tree
+------------------------------------------
 */
 
 // structure format: doubleList(list(parent, left_child, [item, props], right_child))
@@ -88,9 +110,9 @@ const setNodeProp = (node, prop) => {getItem(nextNode(nextNode(node)))[1] = prop
 const setLeftChild = (node, child) => setItem(nextNode(node), child);
 const setRightChild = (node, child) => setItem(nextNode(nextNode(nextNode(node))), child);
 
-//slightly more advanced interfaces
-
-// CHILDS AND PARENTS ARE ONLY DEFINED USING THIS FUNCTION FOR THE SAKE OF AUGMENTATION
+// ---------------------------- SPECIAL FUNCTION -------------------------------------
+// define a child of a parent: includes managing all pointers and augmentations
+// CAUTION: ONLY DEFINE CHILDS AND PARENTS USING THIS FUNCTION FOR THE SAKE OF AUGMENTATION
 function defineChild(parent, child, position) {
     if(!is_null(child)) {
         setParent(child, parent);
@@ -124,6 +146,10 @@ function defineChild(parent, child, position) {
         error(position, 'unsupported string position:');
     }
 }
+// -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------
+
+//slightly more advanced interfaces
 
 function is_root(N) {
     return is_null(getParent(N));
@@ -188,16 +214,21 @@ function subtree_last(N) {
         : subtree_last(getRightChild(N));
 }
 
-//returns the pointer of the node before N in the traversal order
-function predecessor(N){ // this is probably faulty too; gotta check later
-    return is_rightChild(N) && is_null(getLeftChild(N))
-        ? getParent(N)
-        : is_null(getLeftChild(N))
-        ? null
-        : subtree_last(getLeftChild(N));
+//returns the pointer of the node before N in the traversal order of the tree
+function predecessor(N){ //bug fixed
+    if(!is_null(getLeftChild(N))) {
+        return subtree_last(getLeftChild(N));
+    } else {
+        let pointer = N;
+        while(is_leftChild(pointer)) {
+            pointer = getParent(pointer);
+        }
+        
+        return getParent(pointer);
+    }
 }
 
-//returns the pointer of the node after N in the traversal order
+//returns the pointer of the node after N in the traversal order of the tree
 function successor(N) { //bug fixed
     if(!is_null(getRightChild(N))) {
         return subtree_first(getRightChild(N));
@@ -237,30 +268,36 @@ function depth(N) {
 
 //returns the height of a node (distance to leaf)
 //solution 1 (used here): O(n) time
-/*function height(N) {
+/*
+function height(N) {
     return is_null(N)
         ? 0
         : is_leaf(N)
         ? 1
         : 1 + math_max(height(getRightChild(N)), height(getLeftChild(N)));
-}*/
-//solution 2: O(1) time (augment the height)
+}
+*/
 
+//solution 2: O(1) time (augment the height)
 function height(N) {
     return is_null(N)
         ? 0
         : getNodeProp(N);
 }
 
-//skew
+//returns the skewness of a tree
 function skew(tree) {
     return height(getRightChild(tree)) - height(getLeftChild(tree));
 }
 
-//checks if a binary tree is balanced
+//checks if a binary tree is balanced; if so, return true.
 const is_balanced = tree => math_abs(skew(tree)) === 1 || math_abs(skew(tree)) === 0;
 
-// MODIFIERS ---------
+// ------------------------
+// TREE MODIFIERS ---------
+// ------------------------
+// note: augmentation handled automatically in these functions because we use the defineChild function
+
 
 //swap items between two nodes
 function swap(nodeA, nodeB) {
@@ -283,7 +320,8 @@ function swap(nodeA, nodeB) {
     setNodeItem(nodeA, getNodeItem(nodeB));
     setNodeItem(nodeB, itemA);
 }
-//insert
+
+//insertion !!not yet upgraded to maintain balance
 function insert_before(newNode, target) {
     if(getLeftChild(target) === null) {
         defineChild(target, newNode, 'LEFT');
@@ -311,18 +349,20 @@ function severe(N) {
     }
 }
 
-//delete
-function delete_node(N) {
+//deletes item from node N while maintaining everything !! won't work if !is_leaf(tree) and there's no predecessor
+function deleteItem(N) {
     //if leaf: Delete. else: recurse swap through predecessor until leaf.
     if(is_leaf(N)) {
+        const parent = getParent(N);
         severe(N);
+        balance(parent);
     } else {
         swap(N, predecessor(N));
-        delete_node(predecessor(N));
+        deleteItem(predecessor(N));
     }
 }
 
-//rotate the AVL tree
+//rotate the AVL tree !! keep in mind this might change the pointer of the root !!
 function rightRotate(tree) {
     const parent = getParent(tree);
     const subtree_root = tree;
@@ -330,15 +370,22 @@ function rightRotate(tree) {
     const leftSubtree = getLeftChild(tree);
     const rightGrandChild = is_null(leftSubtree) ? null : getRightChild(leftSubtree);
     
-    severe(rightGrandChild);
-    severe(leftSubtree);
-    
-    if(!is_null(parent)) {
-        defineChild(parent, leftSubtree, direction);
+    if(!is_null(rightGrandChild)) {
+        severe(rightGrandChild);
     }
     
-    defineChild(leftSubtree, subtree_root, 'RIGHT');
-    defineChild(subtree_root, rightGrandChild, 'LEFT');
+    if(!is_null(leftSubtree)){
+        severe(leftSubtree);
+        
+        if(!is_null(parent)) {
+            defineChild(parent, leftSubtree, direction);
+        }
+        
+        defineChild(leftSubtree, subtree_root, 'RIGHT');
+        defineChild(subtree_root, rightGrandChild, 'LEFT');
+    }
+    
+    
     
 }
 
@@ -349,15 +396,21 @@ function leftRotate(tree) {
     const rightSubtree = getRightChild(tree);
     const leftGrandChild = is_null(rightSubtree) ? null : getLeftChild(rightSubtree);
     
-    severe(leftGrandChild);
-    severe(rightSubtree);
-    
-    if(!is_null(parent)) {
-        defineChild(parent, rightSubtree);
+    if(!is_null(leftGrandChild)){
+        severe(leftGrandChild);
     }
     
-    defineChild(rightSubtree, subtree_root, 'LEFT');
-    defineChild(subtree_root, leftGrandChild, 'RIGHT');
+    if(!is_null(rightSubtree)) {
+        severe(rightSubtree);
+        
+        if(!is_null(parent)) {
+            defineChild(parent, rightSubtree, direction);
+        }
+        
+        defineChild(rightSubtree, subtree_root, 'LEFT');
+        defineChild(subtree_root, leftGrandChild, 'RIGHT');
+    }
+    
 }
 
 // AUGMENTATION --------
@@ -365,11 +418,12 @@ function leftRotate(tree) {
 what's augmented: either height of or number of elements in a subtree (for now)
 */
 
-//Output a function that receives a function to provide more flexibility later
+//Output a function that receives an augmentation function to provide more flexibility later
 function combine(propA, propB) {
     return f => f(propA, propB);
 }
 
+//augmentation function
 const heightUpdate = (x, y) => x > y ? x + 1 : y + 1;
 const numUpdate = (x, y) => x + y + 1;
 
@@ -397,7 +451,7 @@ function update(st) {
 // ------------
 // TREE BALANCING
 // ------------
-// balance a tree from a leaf to its ancestors
+// balance a tree from a leaf to its ancestors in O(h) = O(log(n))
 function balance(node) {
     /*
     1. From leaf, trace ancestors until lowest unbalanced tree is found
@@ -406,8 +460,8 @@ function balance(node) {
     */
     //given a lowest unbalanced tree, fix it so that it is balanced
     function fix(tree){
-        display('FIXING IN PROGRESS');
         const skewness = skew(tree);
+        
         if(skewness > 0) { //right child bigger than left child by two
             const R = getRightChild(tree);
             if(skew(R) === 1 || skew(R) === 0) {
@@ -434,6 +488,7 @@ function balance(node) {
     }
 }
 
+//Insert a node with element item to the end of the traversal order in a tree while maintaining balance
 function insert_end(item, tree) {
     if(is_null(successor(tree))) {
         insert_after(createNode(null, item, null), tree);
@@ -470,19 +525,6 @@ const checkRight = x => getNodeItem(getRightChild(x));
 const checkLeft = x => getNodeItem(getLeftChild(x));
 const checkParent = x => getNodeItem(getParent(x));
 
-// insert_before(createNode(null, 'A', null), right);
-// insert_before(createNode(null, 'something', null), getLeftChild(right));
-// insert_after(createNode(null, 'B', null), right);
-// insert_before(createNode(null, 'something', null), getRightChild(right));
-
-const A = createNode(null, 'A', null);
-const B = createNode(null, 'B', null);
-const C = createNode(null, 'C', null);
-const D = createNode(null, 'D', null);
-const X = createNode(null, 'X', null);
-const Y = createNode(null, 'Y', null);
-const Z = createNode(null, 'Z', null);
-
 
 //log
 /*
@@ -490,4 +532,5 @@ bug found when defining a grandchild of a root as a child using defineChild(): S
 solution: don't do it.
 
 bug found in left and right rotate: Cases where the nodes involved in rotation are null. Not yet fixed. Gonna sleep now.
+update 02/01/2022: bug fixed.
 */
