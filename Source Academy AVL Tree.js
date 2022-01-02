@@ -28,6 +28,7 @@ let tree = build([1,2,3]);
 ..modify stuff here...
 tree = getRoot(tree); //maintain root. This won't be possible if you use const.
 
+last note: I know it feels really messy to create this with loads of non-pure functions but I just whack everything in the end and it is what it is.
 */
 
 // --------------------------------------------------------------------------------------
