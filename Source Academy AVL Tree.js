@@ -339,8 +339,8 @@ function insert_after(newNode, target) {
     }
 }
 
-//severe the connection of a leaf from its parent.
-function severe(N) {
+//sever the connection of a leaf from its parent.
+function sever(N) {
     const parent = getParent(N);
     
     if(is_rightChild(N)) {
@@ -355,7 +355,7 @@ function deleteItem(N) {
     //if leaf: Delete. else: recurse swap through predecessor until leaf.
     if(is_leaf(N)) {
         const parent = getParent(N);
-        severe(N);
+        sever(N);
         balance(parent);
     } else {
         swap(N, predecessor(N));
@@ -372,11 +372,11 @@ function rightRotate(tree) {
     const rightGrandChild = is_null(leftSubtree) ? null : getRightChild(leftSubtree);
     
     if(!is_null(rightGrandChild)) {
-        severe(rightGrandChild);
+        sever(rightGrandChild);
     }
     
     if(!is_null(leftSubtree)){
-        severe(leftSubtree);
+        sever(leftSubtree);
         
         if(!is_null(parent)) {
             defineChild(parent, leftSubtree, direction);
@@ -398,11 +398,11 @@ function leftRotate(tree) {
     const leftGrandChild = is_null(rightSubtree) ? null : getLeftChild(rightSubtree);
     
     if(!is_null(leftGrandChild)){
-        severe(leftGrandChild);
+        sever(leftGrandChild);
     }
     
     if(!is_null(rightSubtree)) {
-        severe(rightSubtree);
+        sever(rightSubtree);
         
         if(!is_null(parent)) {
             defineChild(parent, rightSubtree, direction);
